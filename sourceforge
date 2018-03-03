@@ -1,0 +1,4 @@
+SF_USERNAME=yourusername
+SF_PASSWORD=yourpassword
+lftp sftp://${SF_USENAME}:${SF_PASSWORD}@frs.sourceforge.net -e 'enter any command here to run in ftp after connecting'
+
