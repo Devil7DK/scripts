@@ -3,7 +3,7 @@ DEVICE_NAME=land
 export USE_CCACHE=1
 prebuilts/misc/linux-x86/ccache/ccache -M 100G
 export KBUILD_BUILD_USER=devil7
-export KBUILD_BUILD_HOST=TeamReloaded
+export KBUILD_BUILD_HOST=Alone
 source build/envsetup.sh
 lunch "${ROM_NAME}_${DEVICE_NAME}-userdebug"
 case $ROM_NAME in
