@@ -1,24 +1,132 @@
-echo "Enabling x86 Support..."
-sudo dpkg --add-architecture i386
-echo "Installing Build Dependencies..."
-sudo apt-get update && sudo apt-get --yes --force-yes install git ccache automake lzop bison gperf build-essential zip curl zlib1g-dev zlib1g-dev:i386 g++-multilib python-networkx libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng bc brotli openjdk-8-jdk
-echo "Creating Bin Directory..."
-mkdir ~/.bin
-echo "Downloading repo tool..."
-curl http://commondatastorage.googleapis.com/git-repo-downloads/repo > ~/.bin/repo
-chmod a+x ~/.bin/repo
-echo "Preparing bashrc"
-echo "export PATH=~/.bin:~/.android-ndk-r17:\$PATH" >> ~/.bashrc
-echo "export USE_CCACHE=1" >> ~/.bashrc
-echo "ccache -M 50G" >> ~/.bashrc
-echo "export KBUILD_BUILD_USER=Devil7DK" >> ~/.bashrc
-echo "export KBUILD_BUILD_HOST=Devil7-Softwares" >> ~/.bashrc
-echo "git config --global credential.helper cache" >> ~/.bashrc
-echo "git config --global credential.helper 'cache --timeout=36000'" >> ~/.bashrc
-export LANG=C
-export PATH=$PATH:~/.android-sdk/tools/
-export PATH=$PATH:~/.android-sdk/platform-tools/
-export CCACHE_DIR=~/.ccache
-source ~/.bashrc
-echo "Installing NDK"
-curl -o ~/ndk.zip https://dl.google.com/android/repository/android-ndk-r17b-linux-x86_64.zip && unzip ~/ndk.zip && mv android-ndk-r17b ~/.android-ndk-r17 && rm ~/ndk.zip
+#!/bin/bash
+
+# Colors
+BLACK='\033[0;30m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+ORANGE='\033[0;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+LIGHTGRAY='\033[0;37m'
+DARKGRAY='\033[1;30m'
+LIGHTRED='\033[1;31m'
+LIGHTGREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+LIGHTBLUE='\033[1;34m'
+LIGHTPURPLE='\033[1;35m'
+LIGHTCYAN='\033[1;36m'
+WHITE='\033[1;37m'
+NC='\033[0m' # No Color
+
+# Banner
+echo -e "\n${BLUE}==================================================================================================================${NC}"
+echo -e "${BLUE}________              .__.__${DARKGRAY}_________  ${BLUE}        ${WHITE}  _________       _____  __                                        ${NC}"
+echo -e "${BLUE}\______ \   _______  _|__|  ${DARKGRAY}\______  \ ${BLUE}        ${WHITE} /   _____/ _____/ ____\/  |___  _  _______  ______   ____   ______${NC}"
+echo -e "${BLUE} |    |  \_/ __ \  \/ /  |  |   ${DARKGRAY}/    / ${BLUE} ______ ${WHITE} \_____  \ /  _ \   __\\|   __\ \/ \/ /\__  \\|_  __ \_/ __ \ /  ___/${NC}"
+echo -e "${BLUE} |    \`   \  ___/\   /|  |  |__${DARKGRAY}/    /  ${BLUE}/_____/ ${WHITE} /        (  <_> )  |   |  |  \     /  / __ \|  | \/\  ___/ \___ \ ${NC}"
+echo -e "${BLUE}/_______  /\___  >\_/ |__|____/${DARKGRAY}____/   ${BLUE}        ${WHITE}/_______  /\____/|__|   |__|   \/\_/  (____  /__|    \___  >____  >${NC}"
+echo -e "${BLUE}        \/     \/              ${DARKGRAY}        ${BLUE}        ${WHITE}        \/                                 \/            \/     \/ ${NC}"
+echo -e "${BLUE}==================================================================================================================${NC}"
+echo -e "${WHITE}                                      ANDROID BUILD ENVIRONMENT SETUP SCRIPT                                      ${NC}"
+echo -e "${BLUE}==================================================================================================================${NC}\n"
+
+# Check for root permission
+if [ "$EUID" -ne 0 ]
+  then echo -e $RED" -- Please run this script as root. Aborting..."$NC
+  exit 1
+fi
+
+# Check multi arch is enabled
+if dpkg --print-foreign-architectures | grep -Fxq 'i386'; then
+    echo -e $BLUE" -- Multi Arch Support Already Enabled.."$NC
+else
+    echo -e $BLUE" -- Enabling Multi Arch Support..."$NC
+    dpkg --add-architecture i386 > /dev/null 2>&1
+    echo -e $GREEN"  - Updating apt-get..."$NC
+    apt-get update > /dev/null 2>&1
+fi
+
+# Install packages
+echo -e $BLUE" -- Installing Build Tools/Dependencies"$NC
+build_tools="git ccache automake lzop bison gperf build-essential zip curl zlib1g-dev zlib1g-dev:i386 g++-multilib python-networkx libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng bc brotli openjdk-8-jdk"
+for build_tool in ${build_tools}; do
+    if [ $(dpkg-query -W -f='${Status}' $build_tool 2>/dev/null | grep -c "ok installed") -eq 0 ]; then
+        echo -e $GREEN"  - Installing Package: $build_tool"$NC
+        apt-get --allow-downgrades --allow-remove-essential --allow-change-held-packages --yes install $build_tool > /dev/null 2>&1|| (echo -e $RED"    Unable to Install! Aborting..." && exit)
+    else
+        echo -e $GREEN"  - Package Already Installed: $build_tool"$NC
+    fi
+done
+
+# Setup Other Tools
+echo -e $BLUE" -- Setting up other tools"$NC
+bin_dir=$HOME/.bin
+if [ ! -d "$bin_dir" ]; then
+    echo -e $GREEN"  - Creating bin directory"$NC
+    mkdir $bin_dir
+fi
+# Repo tool
+repo_path=$bin_dir/repo
+if [ ! -f "$repo_path" ]; then
+    echo -e $GREEN"  - Downloading Tool: repo"$NC
+    curl -s http://commondatastorage.googleapis.com/git-repo-downloads/repo > ~/.bin/repo && chmod a+x $repo_path
+else
+    echo -e $GREEN"  - Tool Already Available: repo"$NC
+fi
+# Android NDK
+ndk_path=$bin_dir/android-ndk-r17b
+ndk_zip=$bin_dir/ndk.zip
+if [ ! -d $ndk_path ]; then
+    echo -e $GREEN"  - Downloading Tool: ndk"$NC
+    curl -so $ndk_zip https://dl.google.com/android/repository/android-ndk-r17b-linux-x86_64.zip || (echo -e $RED"    Unable to download ndk! Aborting..."$NC && exit)
+    echo -e $GREEN"    Extracting ndk..."$NC
+    unzip $ndk_zip -d $bin_dir > /dev/null && rm $ndk_zip || (echo -e $RED"    Unable to extract ndk. Aborting..."$NC && exit)
+else
+    echo -e $GREEN"  - Tool Already Available: ndk"$NC
+fi
+# Android SDK
+sdk_path=$bin_dir/android-sdk
+sdk_zip=$bin_dir/sdk.zip
+if [ ! -d $sdk_path ]; then
+    echo -e $GREEN"  - Downloading Tool: sdk"$NC
+    curl -so $sdk_zip https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip || (echo -e $RED"    Unable to download sdk! Aborting..."$NC && exit)
+    echo -e $GREEN"    Extracting sdk..."$NC
+    unzip $sdk_zip -d $sdk_path > /dev/null && rm $sdk_zip || (echo -e $RED"    Unable to extract sdk. Aborting..."$NC && exit)
+else
+    echo -e $GREEN"  - Tool Already Available: sdk"$NC
+fi
+# Add Export Command to bashrc
+echo -e $BLUE" -- Preparin bashrc"$NC
+bashrc_path=$HOME/.bashrc
+bashrc_lines="\# Variables"
+bashrc_lines+="\nexport PATH=~/.bin:~/.bin/android-ndk-r17b:~/.bin/android-sdk/tools:~/.bin/android-sdk/platform-tools:\$PATH"
+bashrc_lines+="\nexport USE_CCACHE=1"
+bashrc_lines+="\nexport KBUILD_BUILD_USER=Devil7DK"
+bashrc_lines+="\nexport KBUILD_BUILD_HOST=Devil7-Softwares"
+bashrc_lines+="\ngit config --global credential.helper cache"
+bashrc_lines+="\ngit config --global credential.helper 'cache --timeout=36000'"
+bashrc_lines+="\nexport LANG=C"
+bashrc_lines+="\nexport CCACHE_DIR=~/.ccache"
+while [[ $bashrc_lines ]]; do
+    if [[ $bashrc_lines = *'\n'* ]]; then
+        line=${bashrc_lines%%'\n'*}
+        rest=${bashrc_lines#*'\n'}
+    else
+        line=$bashrc_lines
+        rest=''
+    fi
+    if grep -Fxq "$line" $bashrc_path; then
+        echo -e $GREEN"  - Line Already Exists: \"$line\""$NC
+    else
+        echo -e $GREEN"  - Adding Line: \"$line\""$NC
+        echo $line >> $bashrc_path
+    fi
+    bashrc_lines=$rest
+done
+echo -e $GREEN"  - Running bashrc..."$NC
+source $bashrc_path > /dev/null 2>&1
+
+echo -e "${BLUE}==================================================================================================================${NC}"
+echo -e "${GREEN}                                                SCRIPT COMPLETED                                                  ${NC}"
+echo -e "${BLUE}==================================================================================================================${NC}\n"
