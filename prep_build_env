@@ -74,6 +74,15 @@ if [ ! -f "$repo_path" ]; then
 else
     echo -e $GREEN"  - Tool Already Available: repo"$NC
 fi
+# GDrive
+gdrive_path=$bin_dir/gdrive
+if [ ! -f $gdrive_path ]; then
+    echo -e $GREEN"  - Downloading Tool: gdrive"$NC
+    wget -qO $gdrive_path "https://docs.google.com/uc?id=0B3X9GlR6EmbnWksyTEtCM0VfaFE&export=download" || (echo $RED"    Unable to download gdrive! Aborting..."$NC && exit) &&
+    chmod a+x $gdrive_path
+else
+    echo -e $GREEN"  - Tool Already Available: gdrive"$NC
+fi
 # Android NDK
 ndk_path=$bin_dir/android-ndk-r17b
 ndk_zip=$bin_dir/ndk.zip
