@@ -108,7 +108,7 @@ fi
 # Add Export Command to bashrc
 echo -e $BLUE" -- Preparin bashrc"$NC
 bashrc_path=$HOME/.bashrc
-bashrc_lines="\# Variables"
+bashrc_lines="# Variables"
 bashrc_lines+="\nexport PATH=~/.bin:~/.bin/android-ndk-r17b:~/.bin/android-sdk/tools:~/.bin/android-sdk/platform-tools:\$PATH"
 bashrc_lines+="\nexport USE_CCACHE=1"
 bashrc_lines+="\nexport KBUILD_BUILD_USER=Devil7DK"
