@@ -63,7 +63,7 @@ function setup-kernel-building() {
     esac
     echo -e $NC
     set_kernel-config toolchain $tc
-    save_kernel-config
+    save_kernel-configs
     # Export Other Variables
     export O=out/
     export USE_CCACHE=1
