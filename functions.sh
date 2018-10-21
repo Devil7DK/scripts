@@ -119,8 +119,8 @@ function make_kernel() {
     echo -e $GREEN"Making kernel for $device"$NC
     if [ "$clean_dir" != "$PWD" ]; then
         echo -e $GREEN"Cleaning..."$NC
-        make O=out/ mrproper &&
         make O=out/ clean &&
+        make O=out/ mrproper &&
         export clean_dir=$PWD
     fi
     echo -e $GREEN"Starting build..."$NC
