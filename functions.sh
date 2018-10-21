@@ -124,3 +124,34 @@ function make_kernel() {
     make ${device}_defconfig &&
     time make -j$(($(nproc)*2)) $add_parms 2>&1 | tee build.log
 }
+
+# Syntax:
+#        selected_value=$(selectWithDefault <default_value> <values>)
+#        selected_value=$(selectWithDefault option2 option1 option2 option3)
+#
+# Based on https://stackoverflow.com/questions/42789273/bash-choose-default-from-case-when-enter-is-pressed-in-a-select-prompt
+selectWithDefault() {
+    local item i=0 numItems=$#
+
+    # Print numbered menu items, based on the arguments passed.
+    for item in "${@:2}"; do # Skip first arg as its default value
+        printf '%s\n' "$((++i))) $item"
+    done >&2 # Print to stderr, as `select` does.
+
+    # Prompt the user for the index of the desired item.
+    while :; do
+        printf %s "${PS3-#? [$1] }" >&2 # Print the prompt string to stderr, as `select` does.
+        read -r index
+        # Make sure that the input is either empty or that a valid index was entered.
+        [[ -z $index ]] && break  # empty input
+        (( index >= 1 && (index+1) <= numItems )) 2>/dev/null || { echo "Invalid selection. Please try again." >&2; continue; }
+        break
+    done
+
+    # Output the selected item, if any.
+    if [[ -n $index ]]; then
+        printf %s "${@: (index+1):1}" # Return selected item
+    else
+        printf %s "$1" # Return default
+    fi
+}
