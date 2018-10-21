@@ -85,6 +85,17 @@ if [ ! -d $sdk_path ]; then
 else
     echo -e $GREEN"  - Tool Already Available: sdk"$NC
 fi
+# Scripts
+echo -e $BLUE" -- Copying scripts for additional functions"$NC
+scripts_dir=$bin_dir/scripts
+scripts="functions.sh colors.sh kernel-config.sh toolchains.sh"
+echo -e $GREEN"  - Creating directory for scripts"$NC
+mkdir -p $scripts_dir
+for script in $scripts; do
+    echo -e $GREEN"  - Copying script: $script"$NC
+    cp $script_dir/$script $scripts_dir || (echo -e $RED"    Unable to copy script! Aborting..."$NC && exit 1)
+done
+
 # Add Export Command to bashrc
 echo -e $BLUE" -- Preparin bashrc"$NC
 bashrc_path=$HOME/.bashrc
@@ -97,6 +108,7 @@ bashrc_lines+="\ngit config --global credential.helper cache"
 bashrc_lines+="\ngit config --global credential.helper 'cache --timeout=36000'"
 bashrc_lines+="\nexport LANG=C"
 bashrc_lines+="\nexport CCACHE_DIR=~/.ccache"
+bashrc_lines+="\nsource ${scripts_dir}/functions.sh"
 while [[ $bashrc_lines ]]; do
     if [[ $bashrc_lines = *'\n'* ]]; then
         line=${bashrc_lines%%'\n'*}
