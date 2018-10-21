@@ -4,6 +4,7 @@ script_dir=$(dirname "$script_path")
 # Import Scripts
 source $script_dir/colors.sh
 source $script_dir/toolchains.sh
+source $script_dir/kernel-config.sh
 
 function show_banner() {
     echo -e "\n${BLUE}==================================================================================================================${NC}"
@@ -28,42 +29,41 @@ function setup() {
 }
 
 function setup-kernel-building() {
+    load_kernel-configs
     echo -e $GREEN"Preparing Environment for Kernel Building..."$NC
     echo -e $BLUE"Pick ARCH for building:"$YELLOW
-    select arch in arm arm64 ;
-    do
-        case "$arch" in
-            arm)
-                export ARCH=arm
-                export SUBARCH=arm
-                break
-                ;;
-            arm64)
-                export ARCH=arm64
-                export SUBARCH=arm64
-                break
-                ;;
-        esac
-    done
+    default_arch=$(get_kernel-config "arch")
+    arch=$(selectWithDefault $default_arch arm arm64)
+    case "$arch" in
+        arm)
+            export ARCH=arm
+            export SUBARCH=arm
+            ;;
+        arm64)
+            export ARCH=arm64
+            export SUBARCH=arm64
+            ;;
+    esac
     echo -e $GREEN"Selected Arch: $arch"$NC
     echo ""
+    set_kernel-config arch $arch
+    save_kernel-configs
 
     echo -e $BLUE"Pick toolchain for building:"$YELLOW
-    select tc in aosp-gcc aosp-clang ;
-    do
-        case "$tc" in
-            aosp-gcc)
-                setup-aosp-gcc
-                break
-                ;;
-            aosp-clang)
-                setup-aosp-gcc
-                setup-aosp-clang
-                break
-                ;;
-        esac
-    done
+    default_tc=$(get_kernel-config "toolchain")
+    tc=$(selectWithDefault $default_tc aosp-gcc aosp-clang)
+    case "$tc" in
+        aosp-gcc)
+            setup-aosp-gcc
+            ;;
+        aosp-clang)
+            setup-aosp-gcc
+            setup-aosp-clang
+            ;;
+    esac
     echo -e $NC
+    set_kernel-config toolchain $tc
+    save_kernel-config
     # Export Other Variables
     export O=out/
     export USE_CCACHE=1
@@ -78,12 +78,10 @@ function setup-aosp-gcc() {
         arm)
             setup_toolchain $tc_aosp_gcc_arm_path $tc_aosp_gcc_arm $tc_aosp_branch
             export CROSS_COMPILE=arm-linux-androideabi-
-            break
             ;;
         arm64)
             setup_toolchain $tc_aosp_gcc_arm64_path $tc_aosp_gcc_arm64 $tc_aosp_branch
             export CROSS_COMPILE=aarch64-linux-android-
-            break
             ;;
         *)
             echo -e $RED"Unknown/Unsupported Arch! Aborting..."$NC && exit 1
