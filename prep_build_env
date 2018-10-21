@@ -116,6 +116,12 @@ done
 echo -e $GREEN"  - Running bashrc..."$NC
 source $bashrc_path > /dev/null 2>&1
 
+# Change user permissions
+echo -e $BLUE" -- Setting user permissions.."$NC
+user=$(who am i | awk '{print $1}')
+chown $user:$user $bin_dir
+chown -R $user:$user $bin_dir/*
+
 echo -e "${BLUE}==================================================================================================================${NC}"
 echo -e "${GREEN}                                                SCRIPT COMPLETED                                                  ${NC}"
 echo -e "${BLUE}==================================================================================================================${NC}\n"
