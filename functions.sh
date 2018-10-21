@@ -120,7 +120,7 @@ function make_kernel() {
     make mrproper &&
     make clean &&
     make ${device}_defconfig &&
-    time make -j$(($(nproc)*2)) $add_parms 2>&1 | tee build.log
+    time make O=out/ -j$(($(nproc)*2)) $add_parms 2>&1 | tee build.log
 }
 
 # Syntax:
