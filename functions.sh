@@ -116,14 +116,15 @@ function make_kernel() {
     device=$1
     add_parms=$2
 
-    echo -e $GREEN"Building for $device"$NC
+    echo -e $GREEN"Making kernel for $device"$NC
     if [ "$clean_dir" != "$PWD" ]; then
         echo -e $GREEN"Cleaning..."$NC
-        make mrproper &&
-        make clean &&
+        make O=out/ mrproper &&
+        make O=out/ clean &&
         export clean_dir=$PWD
     fi
-    make ${device}_defconfig &&
+    echo -e $GREEN"Starting build..."$NC
+    make O=out/ ${device}_defconfig &&
     time make O=out/ -j$(($(nproc)*2)) $add_parms 2>&1 | tee build.log
 }
 
