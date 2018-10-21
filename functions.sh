@@ -117,8 +117,12 @@ function make_kernel() {
     add_parms=$2
 
     echo -e $GREEN"Building for $device"$NC
-    make mrproper &&
-    make clean &&
+    if [ "$clean_dir" != "$PWD" ]; then
+        echo -e $GREEN"Cleaning..."$NC
+        make mrproper &&
+        make clean &&
+        export clean_dir=$PWD
+    fi
     make ${device}_defconfig &&
     time make O=out/ -j$(($(nproc)*2)) $add_parms 2>&1 | tee build.log
 }
