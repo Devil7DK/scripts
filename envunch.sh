@@ -4,4 +4,4 @@ prebuilts/misc/linux-x86/ccache/ccache -M 100G
 export KBUILD_BUILD_USER=devil7
 export KBUILD_BUILD_HOST=Alone
 source build/envsetup.sh
-lunch "${ROM_NAME}_land-userdebug"
+lunch "${ROM_NAME}_${DEVICE_NAME}-userdebug"

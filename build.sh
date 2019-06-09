@@ -1,5 +1,4 @@
 ROM_NAME="${PWD##*/}" #Usually i use the rom name for its dir. So get name from there
-DEVICE_NAME=land
 export USE_CCACHE=1
 prebuilts/misc/linux-x86/ccache/ccache -M 100G
 export KBUILD_BUILD_USER=devil7
