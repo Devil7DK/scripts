@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [[ -z "${OUT}" ]]; then
+    PATH="out/target/product/${DEVICE_NAME}"
+else
+    PATH=${OUT}
+fi
+
+FILE=$(/bin/ls ${PATH}/Viper*.zip -t1 | /usr/bin/head -n1)
+FILE_NAME=$(/usr/bin/basename ${FILE})
+DEVICE=$(/usr/bin/basename $(/usr/bin/dirname ${FILE}))
+echo "Uploading file: ${FILE_NAME}"
+/usr/bin/scp ${FILE} "${SF_USERNAME}@frs.sourceforge.net:/home/frs/project/viper-project/${DEVICE}"
