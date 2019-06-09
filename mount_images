@@ -1,0 +1,80 @@
+#!/bin/bash
+set -e
+
+LOCALDIR="$PWD"
+SYSTEMDAT="$LOCALDIR/system.new.dat"
+VENDORDAT="$LOCALDIR/vendor.new.dat"
+SYSTEMIMG="$LOCALDIR/system.img"
+VENDORIMG="$LOCALDIR/vendor.img"
+SYSTEMDIR="$LOCALDIR/system_dump"
+VENDORDIR="$SYSTEMDIR/vendor"
+
+if [ ! -f "$SYSTEMDAT" ] && [ -f "$SYSTEMDAT".br ]; then
+     echo "Decompressing system with brotli..."
+     brotli -d "$SYSTEMDAT".br
+fi
+
+if [ ! -f "$VENDORDAT" ] && [ -f "$VENDORDAT".br ]; then
+     echo "Decompressing vendor with brotli..."
+     brotli -d "$VENDORDAT".br
+fi
+
+if [ ! -f "$SYSTEMIMG" ] && [ -f "$SYSTEMDAT" ]; then
+     echo "Converting system.new.dat to img..."
+     sdat2img "$LOCALDIR/system.transfer.list" "$LOCALDIR/system.new.dat" "$LOCALDIR/system.img" > /dev/null
+fi
+
+if [ ! -f "$VENDORIMG" ] && [ -f "$VENDORDAT" ]; then
+     echo "Converting vendor.new.dat to img..."
+     sdat2img "$LOCALDIR/vendor.transfer.list" "$LOCALDIR/vendor.new.dat" "$LOCALDIR/vendor.img" > /dev/null
+fi
+
+if [ -f "$SYSTEMIMG" ] && file "$SYSTEMIMG" | grep "Android sparse image" > /dev/null; then
+     echo "Converting system sparse image to filesystem image..."
+     simg2img "$SYSTEMIMG" "$SYSTEMIMG".tmp && mv "$SYSTEMIMG".tmp "$SYSTEMIMG"
+fi
+
+if [ -f "$VENDORIMG" ] && file "$VENDORIMG" | grep "Android sparse image" > /dev/null; then
+     echo "Converting vendor sparse image to filesystem image..."
+     simg2img "$VENDORIMG" "$VENDORIMG".tmp && mv "$VENDORIMG".tmp "$VENDORIMG"
+fi
+
+if [ ! -d "$SYSTEMDIR" ]; then
+     sudo mkdir -p "$SYSTEMDIR"
+fi
+
+if [ -L "$VENDORDIR" ]; then
+     sudo unlink "$VENDORDIR"
+fi
+
+if [ ! -d "$VENDORDIR" ]; then
+     sudo mkdir -p "$VENDORDIR"
+fi
+
+if mount | grep "$VENDORDIR" > /dev/null; then
+    echo "Vendor path already mounted... Unmounting...!"
+    sudo umount "$VENDORDIR"
+fi
+
+if mount | grep "$SYSTEMDIR" > /dev/null; then
+    echo "System path already mounted... Unmounting...!"
+    sudo umount "$SYSTEMDIR"
+fi
+
+if [ -f "$SYSTEMIMG" ]; then
+    echo "Mounting system..."
+    sudo mount -t ext4 -o loop "$SYSTEMIMG" "$SYSTEMDIR"
+else
+    echo "Unable to find vendor image or any other sources for vendor..."
+fi
+
+if [ -L "$VENDORDIR" ]; then
+     sudo unlink "$VENDORDIR"
+fi
+
+if [ -f "$VENDORIMG" ]; then
+    echo "Mounting vendor..."
+    sudo mount -t ext4 -o loop "$VENDORIMG" "$VENDORDIR"
+else
+    echo "Unable to find vendor image or any other sources for vendor..."
+fi
