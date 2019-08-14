@@ -18,14 +18,17 @@ git submodule update --init --recursive
 
 echo -e "${GREEN} - Generating list of submodule paths...${NC}"
 mapfile -t submodule_paths < <( git submodule status --recursive | cut -d" " -f3 )
-echo -e "${BLUE}   Total submodules found: ${#submodule_paths[@]}${NC}"
+total_count=${#submodule_paths[@]}
+echo -e "${BLUE}   Total submodules found: $total_count${NC}"
 count=0
 for i in "${submodule_paths[@]}"
 do
    :
    submodule_dir=$(realpath $i)
 
-   echo -e "${PURPLE} - Processing submodule $i${NC}"
+   count=$((count+1))
+
+   echo -e "${PURPLE} - Processing submodule $i ${GREEN}[$count/$total_count]${NC}"
    echo -e "${YELLOW}   Preparing for separation${NC}"
    cd $i
    mkdir tmpGitDir
