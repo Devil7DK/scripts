@@ -14,7 +14,7 @@ trap 'echo -e "${RED}-------------------------\nScript Failed\n-----------------
 LOCAL_PATH=${PWD}
 
 echo -e "${GREEN} - Updating all submodules...${NC}"
-git submodule update --init --recursive
+git submodule update --init --recursive --remote &>/dev/null
 
 echo -e "${GREEN} - Generating list of submodule paths...${NC}"
 mapfile -t submodule_paths < <( git submodule status --recursive | cut -d" " -f3 )
