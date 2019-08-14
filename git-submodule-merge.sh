@@ -30,7 +30,10 @@ do
    cd $i
    mkdir tmpGitDir
    git mv -k * tmpGitDir/
-   mkdir -p ./$i
+   sub_dir=$(dirname $i)
+   if [ "$sub_dir" != "." ];then
+     mkdir -p $sub_dir
+   fi
    mv tmpGitDir $i
    git add .
    git commit -m "Prepare ${i} for import" &>/dev/null
