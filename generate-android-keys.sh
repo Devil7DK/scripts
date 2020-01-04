@@ -6,7 +6,7 @@ ORGANIZATION_UNIT="Android Development"
 COMMON_NAME="Devil7DK"
 EMAIL="devil7dk@devil7softwares.in"
 
-KEY_TYPES=(releasekey media platform shared testkey verity)
+KEY_TYPES=(releasekey media networkstack platform shared testkey verity)
 TEMP_KEY="$PWD/temp.pem"
 RED='\033[0;31m'
 NC='\033[0m'
