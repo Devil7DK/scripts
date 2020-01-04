@@ -30,8 +30,20 @@ for KEY_TYPE in "${KEY_TYPES[@]}"; do
 	KEY_PK8_PATH="$KEY_BASE_PATH.pk8"
 
 	echo -e "${RED}Generating $KEY_TYPE...${NC}"
+
 	openssl genrsa -3 -out "$TEMP_KEY" 2048 &> /dev/null
-	openssl req -new -x509 -key "$TEMP_KEY" -out "$KEY_PEM_PATH" -days 10950 -subj "/C=$COUNTRY/ST=$STATE/L=$LOCATION/O=$ORGANIZATION/OU=$ORGANIZATION_UNIT/CN=$COMMON_NAME/emailAddress=$EMAIL"
-	openssl pkcs8 -in "$TEMP_KEY" -topk8 -outform DER -out "$KEY_PK8_PATH" -nocrypt
+
+	if [[ -f "$KEY_PEM_PATH" ]]; then
+		echo -e "${RED} - $KEY_TYPE pem already exists! skipping..."
+	else
+		openssl req -new -x509 -key "$TEMP_KEY" -out "$KEY_PEM_PATH" -days 10950 -subj "/C=$COUNTRY/ST=$STATE/L=$LOCATION/O=$ORGANIZATION/OU=$ORGANIZATION_UNIT/CN=$COMMON_NAME/emailAddress=$EMAIL"
+	fi
+
+	if [[ -f "$KEY_PK8_PATH" ]]; then
+		echo -e "${RED} - $KEY_TYPE pk8 already exists! skipping..."
+	else
+		openssl pkcs8 -in "$TEMP_KEY" -topk8 -outform DER -out "$KEY_PK8_PATH" -nocrypt
+	fi
+
 	shred --remove "$TEMP_KEY"
 done
